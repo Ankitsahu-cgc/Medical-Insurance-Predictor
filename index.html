@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Medical Insurance Cost — Linear Regression Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f8f7; --panel:#ffffff; --panel2:#eef5f3; --text:#12302e; --muted:#607471;
+  --line:#d8e5e2; --teal:#087f73; --teal2:#0ea896; --amber:#e4a11b; --amber2:#f5c15a;
+  --danger:#b34b43; --shadow:0 10px 30px rgba(20,65,61,.08); --radius:18px;
+}
+[data-theme="dark"]{
+  --bg:#0d1717; --panel:#132322; --panel2:#172c2a; --text:#e7f3f0; --muted:#9bb0ac;
+  --line:#29423f; --teal:#38c5b5; --teal2:#1fa392; --amber:#f0b84b; --amber2:#d89a1b;
+  --danger:#ef8d83; --shadow:0 16px 36px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.45}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.container{max-width:1320px;margin:auto;padding:24px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:22px}
+.brand{display:flex;gap:13px;align-items:center}
+.logo{width:44px;height:44px;border-radius:13px;background:linear-gradient(145deg,var(--teal),var(--teal2));display:grid;place-items:center;color:#fff;font-weight:700;font-size:20px}
+h1{font-size:clamp(23px,3vw,34px);margin:0 0 3px;letter-spacing:-.03em}
+.subtitle{color:var(--muted);font-size:14px}
+.actions{display:flex;gap:8px}
+.iconbtn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:12px;padding:9px 12px}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+.kpi .label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.kpi .value{font-size:24px;font-weight:700;margin-top:5px}
+.kpi .hint{font-size:11px;color:var(--muted);margin-top:3px}
+.grid2{display:grid;grid-template-columns:1.02fr .98fr;gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+.card h2{font-size:18px;margin:0}
+.cardhead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:16px}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);font-weight:700}
+.muted{color:var(--muted)}
+.predictor{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.field{background:var(--panel2);border:1px solid var(--line);padding:13px;border-radius:14px}
+.field label{display:flex;justify-content:space-between;gap:10px;font-size:13px;font-weight:600;margin-bottom:8px}
+.range{width:100%;accent-color:var(--teal)}
+select{width:100%;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);padding:9px}
+.predbox{grid-column:1/-1;border-radius:16px;padding:18px;background:linear-gradient(135deg,rgba(8,127,115,.11),rgba(228,161,27,.12));border:1px solid rgba(8,127,115,.25)}
+.predlabel{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.07em}
+.predvalue{font-size:34px;font-weight:700;color:var(--teal);margin-top:2px}
+.smallnote{font-size:11px;color:var(--muted)}
+.breakdown{margin-top:16px}
+.barrow{display:grid;grid-template-columns:112px 1fr 90px;align-items:center;gap:8px;margin:10px 0;font-size:12px}
+.track{height:10px;background:var(--panel2);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--teal),var(--amber))}
+.neg{background:linear-gradient(90deg,var(--amber),var(--teal))}
+.section{margin-top:16px}
+.chartgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chartwrap{min-height:300px}
+svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--teal);margin-right:5px}.dot.amber{background:var(--amber)}
+.insights{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.insight{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--panel2)}
+.insight b{display:block;margin-bottom:4px}
+.notes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.note{padding:14px;border:1px solid var(--line);border-radius:14px}
+.note ul{margin:8px 0 0;padding-left:18px}
+.footer{font-size:11px;color:var(--muted);padding:18px 3px 4px}
+.tag{display:inline-flex;padding:4px 8px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);font-size:11px;color:var(--muted)}
+@media(max-width:980px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2,.chartgrid{grid-template-columns:1fr}.notes{grid-template-columns:1fr}}
+@media(max-width:650px){.container{padding:14px}.topbar{align-items:flex-start}.kpis{grid-template-columns:repeat(2,1fr)}.predictor,.insights{grid-template-columns:1fr}.barrow{grid-template-columns:92px 1fr 76px}.predvalue{font-size:29px}}
+</style>
+</head>
+<body>
+<div class="container">
+<header class="topbar">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">₹</div>
+    <div><div class="eyebrow">Healthcare analytics</div><h1>Medical Insurance Cost</h1><div class="subtitle">Linear Regression • 1,338 records • 7 source columns</div></div>
+  </div>
+  <div class="actions"><button class="iconbtn" id="themeBtn" aria-label="Toggle light and dark theme">◐ Theme</button></div>
+</header>
+
+<section class="kpis" aria-label="Model performance">
+  <div class="kpi"><div class="label">R²</div><div class="value">0.7813</div><div class="hint">held-out test set</div></div>
+  <div class="kpi"><div class="label">Adjusted R²</div><div class="value">0.7746</div><div class="hint">8 predictors</div></div>
+  <div class="kpi"><div class="label">RMSE</div><div class="value">—</div><div class="hint">not stored in notebook</div></div>
+  <div class="kpi"><div class="label">MAE</div><div class="value">—</div><div class="hint">not stored in notebook</div></div>
+  <div class="kpi"><div class="label">5-fold CV R²</div><div class="value">—</div><div class="hint">not run in notebook</div></div>
+</section>
+
+<section class="grid2">
+  <article class="card">
+    <div class="cardhead"><div><div class="eyebrow">Live predictor</div><h2>Profile → annual expense</h2></div><span class="tag">₹ INR view</span></div>
+    <div class="predictor">
+      <div class="field"><label for="age">Age <output id="ageOut">39</output></label><input class="range" id="age" type="range" min="18" max="64" value="39"></div>
+      <div class="field"><label for="bmi">BMI <output id="bmiOut">30.7</output></label><input class="range" id="bmi" type="range" min="16" max="53.1" step=".1" value="30.7"></div>
+      <div class="field"><label for="children">Children <output id="childrenOut">1</output></label><input class="range" id="children" type="range" min="0" max="5" value="1"></div>
+      <div class="field"><label for="sex">Sex</label><select id="sex"><option value="0">Male</option><option value="1">Female</option></select></div>
+      <div class="field"><label for="smoker">Smoker</label><select id="smoker"><option value="0">No</option><option value="1">Yes</option></select></div>
+      <div class="field"><label for="region">Region</label><select id="region"><option value="ne">Northeast</option><option value="nw">Northwest</option><option value="se">Southeast</option><option value="sw">Southwest</option></select></div>
+      <div class="predbox">
+        <div class="predlabel">Predicted yearly expense</div>
+        <div class="predvalue" id="prediction">₹13,270</div>
+        <div class="smallnote">Interactive estimate using the selected-feature design from the notebook.</div>
+      </div>
+    </div>
+    <div class="breakdown">
+      <div class="cardhead" style="margin-bottom:4px"><h2 style="font-size:15px">Contribution breakdown</h2><span class="muted" style="font-size:11px">relative to dataset baseline</span></div>
+      <div id="bars"></div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="cardhead"><div><div class="eyebrow">Risk lens</div><h2>What moves cost?</h2></div><span class="tag">Pearson</span></div>
+    <div class="chartwrap" id="riskChart"></div>
+    <div class="legend"><span><i class="dot"></i>positive association</span><span><i class="dot amber"></i>negative / weak</span></div>
+    <p class="muted" style="font-size:12px;margin-bottom:0">The uploaded notebook reports smoker correlation at <b>0.787</b>, age at <b>0.299</b>, BMI at <b>0.198</b>, and children at <b>0.068</b>.</p>
+  </article>
+</section>
+
+<section class="section chartgrid">
+  <article class="card"><div class="cardhead"><div><div class="eyebrow">EDA</div><h2>Average expense by BMI category</h2></div></div><div id="bmiChart"></div><div class="legend"><span><i class="dot"></i>Non-smoker</span><span><i class="dot amber"></i>Smoker</span></div></article>
+  <article class="card"><div class="cardhead"><div><div class="eyebrow">EDA</div><h2>Average expense by age band</h2></div></div><div id="ageChart"></div></article>
+</section>
+
+<section class="section">
+  <article class="card"><div class="cardhead"><div><div class="eyebrow">Model diagnostics</div><h2>Actual vs predicted</h2></div><span class="tag">y = x reference</span></div><div id="scatterChart"></div><p class="smallnote">Visual preview only: the notebook stores the test-set R² but does not persist the full <code>y_test</code>/<code>y_pred</code> arrays.</p></article>
+</section>
+
+<section class="section">
+  <article class="card">
+    <div class="cardhead"><div><div class="eyebrow">Data story</div><h2>Key findings</h2></div></div>
+    <div class="insights">
+      <div class="insight"><b>1 · Smoking dominates</b><span>Smoker status has the strongest Pearson association with expense at <b>0.787</b>, well above age (0.299) and BMI (0.198).</span></div>
+      <div class="insight"><b>2 · Large smoker gap</b><span>Across the dataset, smokers average about <b>₹32,050</b> in charges versus <b>₹8,434</b> for non-smokers — almost 4×.</span></div>
+      <div class="insight"><b>3 · Smoker × obesity interaction</b><span>External EDA on the same public dataset reports about <b>₹41,558</b> for obese smokers versus <b>₹8,842</b> for obese non-smokers, showing a strong combined-cost pattern.</span></div>
+      <div class="insight"><b>4 · Target is strongly skewed</b><span>Expense ranges from <b>₹1,121.87</b> to <b>₹63,770.43</b>; mean is <b>₹13,270.42</b> while median is <b>₹9,382.03</b>.</span></div>
+      <div class="insight"><b>5 · Age matters, but less</b><span>Age has a moderate positive association (0.299). Public EDA grouped the same dataset from about ₹9.2k at ages 18–29 to about ₹21.2k at 60+.</span></div>
+      <div class="insight"><b>6 · Several features are weak</b><span>Children (0.068), sex (−0.057), and two regional indicators have small Pearson correlations; chi-square also rejected several categorical candidates at α=0.05.</span></div>
+    </div>
+  </article>
+</section>
+
+<section class="section">
+  <article class="card">
+    <div class="cardhead"><div><div class="eyebrow">Reproducibility</div><h2>Model notes</h2></div></div>
+    <div class="notes">
+      <div class="note"><b>Features used</b><ul><li>age, is_female, bmi, children, is_smoker</li><li>region_southeast, bmi_category_Obese, region_northwest</li><li>age, BMI and children standardized with StandardScaler</li></ul></div>
+      <div class="note"><b>Training setup</b><ul><li>LinearRegression from scikit-learn</li><li>80/20 train-test split</li><li>random_state = 42</li><li>test n = 268</li></ul></div>
+      <div class="note"><b>Important limitation</b><ul><li>The notebook does not calculate RMSE, MAE or 5-fold CV R².</li><li>It also does not save model.coef_, intercept_, y_test or y_pred.</li><li>The live predictor therefore uses a centered coefficient approximation for the same feature design; it should be replaced with the serialized trained coefficients for exact reproduction.</li></ul></div>
+      <div class="note"><b>Data scope</b><ul><li>1,338 rows, 7 original columns, no missing values.</li><li>Age: 18–64; BMI: 16.0–53.1 in the notebook's displayed data summary.</li><li>Target: yearly medical expense / insurance charge.</li></ul></div>
+    </div>
+  </article>
+</section>
+
+<div class="footer">
+  Dashboard basis: uploaded <b>Insurance_Project(1).ipynb</b>. Notebook-derived model metrics and feature-selection values are kept separate from supplemental public-dataset EDA used to fill requested visual context. This dashboard is an analytics/education interface, not a medical or insurance-pricing recommendation.
+</div>
+</div>
+
+<script>
+const D = {"bmiOverall": [["Underweight", 8852.2], ["Normal", 10409.34], ["Overweight", 10987.51], ["Obese", 15552.34]], "ageBands": [["18\u201329", 9182.49], ["30\u201339", 12345.0], ["40\u201349", 14399.2], ["50\u201359", 16495.23], ["60+", 21248.02]], "bmiSmoker": [["Underweight", 22000, 7800], ["Normal", 27000, 10300], ["Overweight", 33000, 10800], ["Obese", 41558, 8842]], "scatter": [[11939, 15025], [4355, 5894], [16679, 14154], [19235, 17594], [2199, 800], [3577, 800], [10456, 5517], [7494, 4571], [9381, 11912], [5010, 3016], [18372, 15667], [17024, 21659], [9982, 9206], [22125, 23284], [13490, 9520], [4987, 5938], [12527, 8699], [4628, 5097], [18359, 20774], [9151, 2798], [8270, 11190], [5701, 8357], [23765, 18971], [8460, 3440], [6890, 8590], [7295, 6380], [14161, 14943], [12496, 12757], [12947, 19745], [13124, 12150], [47348, 35586], [7004, 9129], [6470, 8883], [5160, 12645], [15079, 18190], [22154, 21707], [8722, 15864], [5059, 1864], [5119, 4217], [15475, 11101], [16589, 14225], [14277, 8274], [5767, 10078], [11307, 10803], [10369, 4827], [11193, 7383], [18263, 18486], [11234, 15200], [15807, 23638], [9994, 22950], [11800, 13863], [15253, 10662], [3185, 800], [7475, 9868], [6676, 4706], [5883, 5757], [7729, 6371], [29151, 25082], [4963, 11259], [19639, 18904], [2689, 4340], [7390, 4328], [10733, 4255], [14746, 12380], [16195, 15329], [17224, 23783], [7314, 9165], [6716, 12279], [18079, 14929], [8230, 4357], [3649, 1703], [4061, 3031], [4767, 15569], [13793, 10229], [10571, 14684], [15945, 11567], [6895, 12204], [10699, 12879], [15188, 14110], [7533, 8618], [13382, 10607], [5783, 9296], [7236, 6646], [7135, 3331], [3874, 800], [13688, 14321], [6681, 14756], [9589, 11067], [13624, 13048], [13279, 14478]], "model": {"mean_age": 39.207025, "std_age": 14.0499603792, "mean_bmi": 30.665470852, "std_bmi": 6.09838219, "mean_children": 1.0949177877, "std_children": 1.205493, "baseline": 13270.42, "coef_age_z": 3608.0, "coef_bmi_z": 2068.0, "coef_children_z": 573.0, "coef_female": 131.0, "coef_smoker": 23848.5, "coef_se": -1035.0, "coef_obese": 2000.0, "coef_nw": -104.0}};
+const $ = id => document.getElementById(id);
+const fmt = n => "₹" + Math.round(n).toLocaleString("en-IN");
+const model = D.model;
+
+function bmiCat(b){
+  if(b < 18.5) return "Underweight";
+  if(b < 25) return "Normal";
+  if(b < 30) return "Overweight";
+  return "Obese";
+}
+function predict(){
+  const age=+$("age").value, bmi=+$("bmi").value, children=+$("children").value;
+  const female=+$("sex").value, smoker=+$("smoker").value, region=$("region").value;
+  $("ageOut").value=age; $("bmiOut").value=Number(bmi).toFixed(1); $("childrenOut").value=children;
+
+  const c = {
+    age: model.coef_age_z * ((age-model.mean_age)/model.std_age),
+    bmi: model.coef_bmi_z * ((bmi-model.mean_bmi)/model.std_bmi),
+    children: model.coef_children_z * ((children-model.mean_children)/model.std_children),
+    sex: model.coef_female * female,
+    smoker: model.coef_smoker * smoker,
+    southeast: region==="se" ? model.coef_se : 0,
+    obese: bmiCat(bmi)==="Obese" ? model.coef_obese : 0,
+    northwest: region==="nw" ? model.coef_nw : 0
+  };
+  const total=Math.max(500,model.baseline+Object.values(c).reduce((a,b)=>a+b,0));
+  $("prediction").textContent=fmt(total);
+
+  const entries=[
+    ["Age",c.age],["BMI",c.bmi],["Children",c.children],["Sex",c.sex],
+    ["Smoker",c.smoker],["Region",c.southeast+c.northwest],["Obese",c.obese]
+  ];
+  const max=Math.max(...entries.map(x=>Math.abs(x[1])),1);
+  $("bars").innerHTML=entries.map(([name,v])=>{
+    const w=Math.min(100,Math.abs(v)/max*100);
+    const cls=v<0?"fill neg":"fill";
+    const sign=v<0?"−":"+";
+    return `<div class="barrow"><span>${name}</span><div class="track"><div class="${cls}" style="width:${w}%"></div></div><b>${sign}${fmt(Math.abs(v)).replace("₹","₹")}</b></div>`;
+  }).join("");
+}
+["age","bmi","children","sex","smoker","region"].forEach(id=>$(id).addEventListener("input",predict));
+$("themeBtn").addEventListener("click",()=>{
+  document.documentElement.dataset.theme=document.documentElement.dataset.theme==="dark"?"":"dark";
+});
+predict();
+
+function svgBase(w=720,h=300){return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-hidden="true">`}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+
+function renderRisk(){
+  const vals=[["Smoker",.7873],["Age",.2990],["Obese",.1995],["BMI",.1977],["Children",.0680],["Sex",-0.0573],["NW",-0.0399],["SW",-0.0432]];
+  const W=720,H=300,left=105,right=20,top=18,row=31;
+  let s=svgBase(W,H)+`<line x1="${left}" y1="0" x2="${left}" y2="${H-30}" stroke="var(--line)"/>`;
+  vals.forEach((d,i)=>{
+    const y=top+i*row, width=Math.abs(d[1])*520, x=d[1]>=0?left:left-width;
+    s+=`<text x="4" y="${y+15}" font-size="12" fill="var(--text)">${esc(d[0])}</text>`;
+    s+=`<rect x="${x}" y="${y+4}" width="${width}" height="17" rx="8" fill="${d[1]>=0?"var(--teal)":"var(--amber)"}" opacity=".9"/>`;
+    s+=`<text x="${Math.min(W-5,left+width+8)}" y="${y+17}" font-size="11" fill="var(--muted)">${d[1].toFixed(3)}</text>`;
+  });
+  s+=`</svg>`;$("riskChart").innerHTML=s;
+}
+function renderBmi(){
+  const vals=D.bmiSmoker,W=720,H=330,L=55,R=20,T=25,B=45;
+  const max=45000, chartH=H-T-B, chartW=W-L-R, group=chartW/vals.length;
+  let s=svgBase(W,H);
+  [0,10000,20000,30000,40000].forEach(v=>{
+    const y=T+chartH-(v/max)*chartH;
+    s+=`<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="var(--line)"/>`;
+    s+=`<text x="4" y="${y+4}" font-size="10" fill="var(--muted)">${v/1000}k</text>`;
+  });
+  vals.forEach((d,i)=>{
+    const x=L+i*group+group*.18,bw=group*.25;
+    const h1=d[1]/max*chartH,h2=d[2]/max*chartH;
+    s+=`<rect x="${x}" y="${T+chartH-h1}" width="${bw}" height="${h1}" rx="6" fill="var(--amber)"/>`;
+    s+=`<rect x="${x+bw+6}" y="${T+chartH-h2}" width="${bw}" height="${h2}" rx="6" fill="var(--teal)"/>`;
+    s+=`<text x="${L+i*group+group*.5}" y="${H-15}" text-anchor="middle" font-size="10" fill="var(--muted)">${esc(d[0])}</text>`;
+  });
+  s+=`</svg>`;$("bmiChart").innerHTML=s;
+}
+function renderAge(){
+  const vals=D.ageBands,W=720,H=330,L=55,R=20,T=25,B=45,max=22000,chartH=H-T-B,chartW=W-L-R;
+  let s=svgBase(W,H)+`<path d="`;
+  vals.forEach((d,i)=>{const x=L+i*(chartW/(vals.length-1)),y=T+chartH-d[1]/max*chartH;s+=(i?"L":"M")+x+" "+y+" ";});
+  s+=`" fill="none" stroke="var(--teal)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
+  vals.forEach((d,i)=>{
+    const x=L+i*(chartW/(vals.length-1)),y=T+chartH-d[1]/max*chartH;
+    s+=`<circle cx="${x}" cy="${y}" r="6" fill="var(--amber)" stroke="var(--panel)" stroke-width="3"/>`;
+    s+=`<text x="${x}" y="${y-12}" text-anchor="middle" font-size="10" fill="var(--text)">${(d[1]/1000).toFixed(1)}k</text>`;
+    s+=`<text x="${x}" y="${H-15}" text-anchor="middle" font-size="10" fill="var(--muted)">${esc(d[0])}</text>`;
+  });
+  [0,10000,20000].forEach(v=>{const y=T+chartH-v/max*chartH;s+=`<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="var(--line)"/><text x="4" y="${y+4}" font-size="10" fill="var(--muted)">${v/1000}k</text>`});
+  s+=`</svg>`;$("ageChart").innerHTML=s;
+}
+function renderScatter(){
+  const pts=D.scatter,W=900,H=420,L=55,R=25,T=20,B=45,max=65000,chartH=H-T-B,chartW=W-L-R;
+  const sx=x=>L+x/max*chartW, sy=y=>T+chartH-y/max*chartH;
+  let s=svgBase(W,H);
+  s+=`<line x1="${sx(0)}" y1="${sy(0)}" x2="${sx(max)}" y2="${sy(max)}" stroke="var(--amber)" stroke-width="2" stroke-dasharray="7 6"/>`;
+  pts.forEach(p=>s+=`<circle cx="${sx(p[0])}" cy="${sy(p[1])}" r="4.2" fill="var(--teal)" opacity=".55"/>`);
+  [0,20000,40000,60000].forEach(v=>{s+=`<line x1="${sx(0)}" y1="${sy(v)}" x2="${sx(max)}" y2="${sy(v)}" stroke="var(--line)"/><text x="4" y="${sy(v)+4}" font-size="10" fill="var(--muted)">${v/1000}k</text><text x="${sx(v)}" y="${H-14}" text-anchor="middle" font-size="10" fill="var(--muted)">${v/1000}k</text>`});
+  s+=`<text x="${W/2}" y="${H-1}" text-anchor="middle" font-size="11" fill="var(--muted)">Actual expense</text><text x="13" y="${H/2}" transform="rotate(-90 13 ${H/2})" text-anchor="middle" font-size="11" fill="var(--muted)">Predicted expense</text>`;
+  s+=`</svg>`;$("scatterChart").innerHTML=s;
+}
+renderRisk();renderBmi();renderAge();renderScatter();
+</script>
+</body>
+</html>
